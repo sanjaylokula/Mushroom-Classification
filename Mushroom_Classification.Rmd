@@ -325,7 +325,7 @@ confusionMatrix(factor(predictions$predicted), factor(Actual$original))
 ```{r}
 ## Random forest model
 
-
+set.seed(4543)
 model_rf <- randomForest(
   factor(classp) ~ .,
   data = trainset, ntree =100, importance =T
@@ -345,6 +345,23 @@ confusionMatrix(factor(predictions_rf$prediction_1), factor(testset$class))
 print(sprintf("Area under curve (AUC) : %.3f",auc(testset$classp, predictions_rf$prediction_1)))
 
 ```
+```{r}
+varImpPlot(model_rf, n.var=min(15, nrow(model_rf$importance)))
+```
+
+```{r}
+varimp <- data.frame(model_rf$importance)
+  vi1 <- ggplot(varimp, aes(x=reorder(rownames(varimp),IncNodePurity), y=IncNodePurity)) +
+  geom_bar(stat="identity", fill="green", colour="black") +
+  coord_flip() + theme_bw(base_size = 8) +
+  labs(title="Prediction using RandomForest with 100 trees", subtitle="Variable importance (IncNodePurity)", x="Variable", y="Variable importance (IncNodePurity)")
+  vi2 <- ggplot(varimp, aes(x=reorder(rownames(varimp),X.IncMSE), y=X.IncMSE)) +
+  geom_bar(stat="identity", fill="lightblue", colour="black") +
+  coord_flip() + theme_bw(base_size = 8) +
+  labs(title="Prediction using RandomForest with 100 trees", subtitle="Variable importance (%IncMSE)", x="Variable", y="Variable importance (%IncMSE)")
+  grid.arrange(vi1, vi2, ncol=2)
+```
+
 ```{r}
 summarize_tree(model_rf)
 ```
