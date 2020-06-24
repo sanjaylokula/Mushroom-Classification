@@ -164,3 +164,37 @@ f = ggplot(mushroom_data) + geom_bar(aes(x = odor))+
 
 ```
 
+### Data Preprocessing
+
+#### Removing veil.type as it has only one factor
+#### Converting all the columns to factors 
+
+```{r}
+mushroom_data_mod1 <- mushroom_data %>% select(-veil.type)
+mushroom_data_mod1[names(mushroom_data_mod1)] <- lapply(mushroom_data_mod1[names(mushroom_data_mod1)], as.factor)
+```
+
+
+#### As the response is a dicotomous value performing logistic regression to check the variable importance
+
+```{r}
+model_logistic_test <-  glm(class ~. , data = mushroom_data_mod1, family = binomial(link = logit))
+summary(model_logistic_test)
+```
+#### Identified 10 variables with un-defined coefficients due to singularities.
+
+#### Applying vif
+```{r}
+vif(model_logistic_test)
+```
+
+#### Due to the presence of singularities unable to do VIF
+#### Applying alias to identify and remove singularities
+
+```{r}
+aliases_round1 <- alias(model_logistic_test)
+excluded_factors_round1<- rownames(aliases_round1$Complete)
+print(excluded_factors_round1)
+```
+
+
