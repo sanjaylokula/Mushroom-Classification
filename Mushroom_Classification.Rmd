@@ -125,4 +125,42 @@ num_of_class
 
 ```
 
+### Features analysis Part 2
+#### In case if needs to do further investigate so transfter all factor to numeric
+
+```{r}
+mushroom_numeric<- sapply(mushroom_data[,1:23], function (x) as.numeric(as.factor(x)))
+head(mushroom_numeric)
+```
+
+
+
+
+### Correlation analysis
+#####  Delete no.17 column of veil-type since it has only one type that is partial
+```{r}
+cor_mushroom <- cor(mushroom_numeric[, -17])
+corrplot.mixed(cor_mushroom,order="AOE")
+
+
+CombinePlots(plots=list(a,b,c,d,e,f))
+a= ggplot(mushroom_data) + geom_bar(aes(x = class))+
+  ggtitle("Distribution of class") + ylim(0, 5000)
+
+b = ggplot(mushroom_data) + geom_bar(aes(x = cap.shape))+
+  ggtitle("Distribution of cap.shape") + ylim(0, 4000)
+
+c = ggplot(mushroom_data) + geom_bar(aes(x = cap.surface))+
+  ggtitle("Distribution of cap.surface") + ylim(0, 4000)
+
+d = ggplot(mushroom_data) + geom_bar(aes(x = cap.color))+
+  ggtitle("Distribution of cap.color") + ylim(0, 3000)
+
+e = ggplot(mushroom_data) + geom_bar(aes(x = bruises))+
+  ggtitle("Distribution of bruises") + ylim(0, 5000)
+
+f = ggplot(mushroom_data) + geom_bar(aes(x = odor))+
+  ggtitle("Distribution of odor") + ylim(0, 4000)
+
+```
 
