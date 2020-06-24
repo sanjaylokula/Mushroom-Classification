@@ -22,6 +22,8 @@ library(corrplot)
 library(Seurat)
 library(caret)
 library(plyr)
+library(data.table)
+
 ```
 
 
@@ -197,4 +199,47 @@ excluded_factors_round1<- rownames(aliases_round1$Complete)
 print(excluded_factors_round1)
 ```
 
+#### Removing factors show singularities
+
+```{r}
+
+fact_round0 <- model.matrix(~. , mushroom_data_mod1)[,-1]
+
+factors_round1 <- setdiff(colnames(fact_round0), excluded_factors_round1)
+
+mushroom_data_mod2 <- as.data.frame(fact_round0[,factors_round1])
+colnames(mushroom_data_mod2)
+```
+#### Round 2 verification for singularities
+
+```{r}
+model_logistic_test2 <-  glm(classp ~. , data = mushroom_data_mod2, family = binomial(link = logit))
+summary(model_logistic_test2)
+```
+#### model summary shows no singularities
+
+#### proceeding with VIF analysis
+
+```{r}
+vif_round1 <- vif(model_logistic_test2)
+```
+
+#### Multiple factos show VIF greater than 10, Benchmark set to 10
+
+```{r}
+vif_df_round1 <- as.data.frame(vif_round1)
+setDT(vif_df_round1, keep.rownames = TRUE)[]
+vif_rn1_exclude <- filter(vif_df_round1, vif_round1 > 10)[,1]
+
+```
+#### Excluded highly correlated factors Round 1
+
+```{r}
+vif_fact_round0 <- model.matrix(~. , mushroom_data_mod2)[,-1]
+
+factors_round1 <- setdiff(colnames(vif_fact_round0), vif_rn1_exclude)
+
+mushroom_data_mod3 <- as.data.frame(vif_fact_round0[,factors_round1])
+colnames(mushroom_data_mod3)
+```
 
