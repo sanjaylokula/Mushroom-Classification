@@ -243,3 +243,30 @@ mushroom_data_mod3 <- as.data.frame(vif_fact_round0[,factors_round1])
 colnames(mushroom_data_mod3)
 ```
 
+### Round 2 Vif Analysis
+```{r}
+model_logistic_test3 <- glm(classp ~. , data = mushroom_data_mod3, family = binomial(link = logit))
+
+vif_df_round2 <- as.data.frame(vif(model_logistic_test3))
+# renaming the first column back to value
+setDT(vif_df_round2, keep.rownames = TRUE)[]
+# renaming the second column back to value
+
+names(vif_df_round2)[2] <- "value"
+vif_rn2_exclude <- filter(vif_df_round2, value > 10)[,1]
+print(vif_rn2_exclude)
+```
+
+### Still there are a few variables with vif value greater than 10
+#### eliminating 2 factos
+
+#### Excluded highly correlated factors Round 2
+
+```{r}
+vif_fact_round1 <- model.matrix(~. , mushroom_data_mod3)[,-1]
+
+factors_round1 <- setdiff(colnames(vif_fact_round1), vif_rn2_exclude)
+
+mushroom_data_mod3 <- as.data.frame(vif_fact_round0[,factors_round1])
+colnames(mushroom_data_mod3)
+```
