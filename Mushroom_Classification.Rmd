@@ -21,6 +21,7 @@ library(dplyr)
 library(corrplot)
 library(Seurat)
 library(caret)
+library(plyr)
 ```
 
 
@@ -41,7 +42,7 @@ summary(mushroom_data)
 #### Class identification
 
 ```{r}
-str(mushroom)
+str(mushroom_data)
 # All type of data are factor
 
 ```
@@ -50,8 +51,77 @@ str(mushroom)
 #### Missing value analysis
 # Let's see is there any NA value and is there any column needs a better name
 ```{r}
-sapply(mushroom,function(x)sum(is.na(x)))
+sapply(mushroom_data,function(x)sum(is.na(x)))
 # There is no missing value in any column, and all column's name are clear
+
+```
+
+### EDA (Exploratory Data Analysis)
+
+#### Feature Analysis
+
+```{r}
+
+class <- plyr::count(mushroom_data$class)
+print(sprintf("Edible: %d | Poisonous: %d | Percent of poisonous classes: %.1f%%",class$freq[1],class$freq[2], round(class$freq[1]/nrow(mushroom_data)*100,1)))
+```
+
+
+#### Analyzing the attributes with low numbers of categories
+#### Analyzing "bruises"
+
+```{r}
+ggplot(mushroom_data, aes(bruises, fill = class)) + geom_bar(position = "dodge")
+```
+
+#### Analyzing gill.attachment
+```{r}
+ggplot(mushroom_data, aes(gill.attachment, fill = class)) + geom_bar(position = "dodge")
+
+```
+
+
+
+#### gill.spacing
+```{r}
+ggplot(mushroom_data, aes(gill.spacing, fill = class)) + geom_bar(position = "dodge")
+
+```
+
+
+#### Almost equally distributed classes 
+
+#### gill.size
+```{r}
+ggplot(mushroom_data, aes(gill.size, fill = class)) + geom_bar(position = "dodge")
+
+```
+
+
+
+#### stalk.shape
+```{r}
+ggplot(mushroom_data, aes(stalk.shape, fill = class)) + geom_bar(position = "dodge")
+
+```
+
+
+#### odor
+```{r}
+ggplot(mushroom_data, aes(odor, fill = class)) + geom_bar(position = "dodge")
+#Fully Edible: 'a' & 'l'
+#Mostly Edible: 'n' (A very small portion of this class fall under poisonous)
+#Fully poisonous: 'c', 'f', 'm','p', 's' & 'y'
+```
+
+
+
+
+#### Class analysis
+##### Calculate number of class for each variable
+```{r}
+num_of_class <-cbind.data.frame(Var=names(mushroom_data), Total_Class=sapply(mushroom_data,function(x){as.numeric(length(levels(factor(x))))}))
+num_of_class
 
 ```
 
