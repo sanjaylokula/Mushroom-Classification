@@ -23,6 +23,10 @@ library(Seurat)
 library(caret)
 library(plyr)
 library(data.table)
+library(randomForest)
+library(gbm)
+library(Metrics)
+library(regclass)
 
 ```
 
@@ -40,6 +44,9 @@ mushroom_data <- read.csv(file.choose(), stringsAsFactors = FALSE)
 summary(mushroom_data)
 ```
 
+```{r}
+View(mushroom_data)
+```
 
 #### Class identification
 
@@ -267,6 +274,116 @@ vif_fact_round1 <- model.matrix(~. , mushroom_data_mod3)[,-1]
 
 factors_round1 <- setdiff(colnames(vif_fact_round1), vif_rn2_exclude)
 
-mushroom_data_mod3 <- as.data.frame(vif_fact_round0[,factors_round1])
+mushroom_data_mod4 <- as.data.frame(vif_fact_round0[,factors_round1])
 colnames(mushroom_data_mod3)
 ```
+
+### Backward feature selection using step selection
+
+```{r}
+model_logistic_test4 <- glm(classp ~. , data = mushroom_data_mod2, family = binomial(link = logit))
+stepModel <- step(model_logistic_test4, direction = "forward")
+```
+
+```{r}
+summary(stepModel)
+```
+```{r}
+# Splitting the data into train and test, train=80% and test=20%
+split_data <- sample(1:nrow(mushroom_data_mod4), size=0.8*nrow(mushroom_data_mod4))
+trainset = data.frame(mushroom_data_mod4[split_data ,])
+testset = data.frame(mushroom_data_mod4[-split_data ,])
+
+```
+
+```{r}
+## Modeling
+
+## Logistic regression
+
+# use all the variables first 
+model_logistic <- glm(classp ~. , data = trainset, family = binomial(link = logit))
+# Summary of the primary model
+summary(model_logistic) 
+
+# Predict and Test data
+predictions <- as.data.frame(predict(model_logistic,testset[,-1],type = "response"))
+# renaming the column names
+names(predictions) <- c("predicted")
+class(predictions)
+# The threshold value used is 0.5
+predictions <- predictions %>% mutate(predicted = as.numeric((as.numeric(predicted) > as.numeric(0.6))))
+
+# Actual Data
+Actual <- as.data.frame(testset[,1])
+names(Actual) <- c("original")
+
+
+# Confusion Matrix is developed to find the accuracy of the model
+confusionMatrix(factor(predictions$predicted), factor(Actual$original))
+```
+```{r}
+## Random forest model
+
+
+model_rf <- randomForest(
+  factor(classp) ~ .,
+  data = trainset, ntree =100, importance =T
+)
+
+# predictions
+predictions_rf <-  as.data.frame(predict(model_rf,testset[,-1],type = "response"))
+colnames(predictions_rf) <- c("prediction_1")
+
+# Calculating the model accuracy
+summary(model_rf)
+confusionMatrix(factor(predictions_rf$prediction_1), factor(testset$class))
+
+
+# Calculating AUC  -- Area under the curve
+
+print(sprintf("Area under curve (AUC) : %.3f",auc(testset$classp, predictions_rf$prediction_1)))
+
+```
+```{r}
+summarize_tree(model_rf)
+```
+
+
+```{r}
+## Gradient Boost Machine (GBM) model
+
+# names of the dataset
+n<-names(trainset)
+# calculating the form using regex modeling class with all the variables except class
+gbm.form <- as.formula(paste("classp ~", paste(n[!n %in% "classp"], collapse = " + ")))
+# modeling the gbm using n.trees=400, shrinkage =0.01 and 10 fold cross validation
+model_gbm = gbm(formula = gbm.form,
+            distribution = "bernoulli",
+            data = trainset,
+            n.trees = 400,
+            shrinkage = .2,
+            n.minobsinnode = 15,
+            cv.folds = 10,
+            n.cores = 1)
+# Calulating the optimal trees value using the gbm.performance
+optimaltrees = gbm.perf(model_gbm)
+
+
+
+# predicting on the test dataset
+predicted_gbm = as.data.frame(predict(object = model_gbm,
+                  newdata = testset[,-1],
+                  n.trees = optimaltrees,
+                  type = "response"))
+# Changing the column name
+colnames(predicted_gbm) <- c("prediction_1")
+# The threshold value used is 0.5
+predictions_gbm <- predicted_gbm %>% mutate(prediction_1 = as.numeric((as.numeric(prediction_1) > as.numeric(0.5))))
+
+# plotting the confusion matrix
+confusionMatrix(factor(predictions_gbm$prediction_1), factor(testset$class))
+print(sprintf("Area under curve (AUC) : %.3f",auc(testset$class, predictions_gbm$prediction_1)))
+
+```
+
