@@ -1,0 +1,49 @@
+---
+title: "Mushroom Classification"
+author: "Sanjay Lokula"
+date: "24/06/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Loading the Necessary Libraries
+
+```{r}
+library(stringr)
+library(stringi)
+library(car)
+library(dplyr)
+library(ggplot2)
+library(dplyr)
+library(corrplot)
+library(Seurat)
+library(caret)
+```
+
+
+#### Loading the Dataset
+
+```{r}
+mushroom_data <- read.csv(file.choose(), stringsAsFactors = FALSE)
+```
+
+
+#### Summary of the dataset
+
+```{r}
+summary(mushroom_data)
+```
+
+
+#### Class identification
+
+```{r}
+str(mushroom)
+# All type of data are factor
+
+```
+
+
